@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>רובי-בוט - צ'אטבוט חינוכי</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { Send, Bot, User, Settings, X } = lucide;
+
+    const RobiBot = () => {
+      const [messages, setMessages] = React.useState([
+        { role: 'model', content: 'שלום! אני רובי-בוט 🤖 תשאל אותי כל שאלה!' }
+      ]);
+      const [input, setInput] = React.useState('');
+      const [isLoading, setIsLoading] = React.useState(false);
+      const [showSettings, setShowSettings] = React.useState(false);
+      const [prompt, setPrompt] = React.useState('');
+      const messagesEndRef = React.useRef(null);
+
+      const [answers, setAnswers] = React.useState({
+        q1: '5', q2: '5', q3: '5', q4: '4', q5: '5',
+        q6: '5', q7: '5', q8: '5', q9: '5', q10: '5'
+      });
+
+      const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      React.useEffect(() => {
+        scrollToBottom();
+      }, [messages]);
+
+      React.useEffect(() => {
+        buildPrompt();
+      }, [answers]);
+
+      const questions = {
+        q1: { 
+          title: 'תחום הדמות',
+          options: ['תנ"ך/היסטוריה יהודית', 'היסטוריה כללית', 'מדע וטבע', 'ספרות ואמנות', 'Gemini יחליט']
+        },
+        q2: {
+          title: 'מי הדמות',
+          options: ['אדם אמיתי', 'דמות מהתנ"ך', 'מדען/ית', 'דמות בדיונית', 'Gemini יחליט']
+        },
+        q3: {
+          title: 'גיל התלמידים',
+          options: ['כיתות א-ב (6-8)', 'כיתות ג-ד (8-10)', 'כיתות ה-ו (10-12)', 'חטיבת ביניים (12-15)', 'Gemini יחליט']
+        },
+        q4: {
+          title: 'שפה',
+          options: ['עברית בלבד', 'גרמנית בלבד', 'אנגלית בלבד', 'לפי שפת המשתמש', 'Gemini יחליט']
+        },
+        q5: {
+          title: 'סגנון דיבור',
+          options: ['רשמי וחינוכי', 'חם וסבא/סבתא', 'מצחיק וקליל', 'דרמטי ורגשי', 'Gemini יחליט']
+        },
+        q6: {
+          title: 'חיבור שירים',
+          options: ['כן תמיד', 'רק אם מתאים', 'לא', 'Gemini יחליט']
+        },
+        q7: {
+          title: 'אורך תשובות',
+          options: ['קצרצר (1-2)', 'קצר (2-4)', 'בינוני (4-6)', 'ארוך (פסקה)', 'Gemini יחליט']
+        },
+        q8: {
+          title: 'דמויות נוספות',
+          options: ['לא, רק אחת', 'כן, משפחה/חברים', 'כן, מאותו תחום', 'Gemini יחליט']
+        },
+        q9: {
+          title: 'שאלה שלא יודע',
+          options: ['אומר "לא יודע"', 'אומר "לא מתקופתי"', 'מפנה לשאלה אחרת', 'מנסה לענות', 'Gemini יחליט']
+        },
+        q10: {
+          title: 'אימוג\'ים',
+          options: ['הרבה 🎉', 'במידה 😊', 'מעט', 'בכלל לא', 'Gemini יחליט']
+        }
+      };
+
+      const buildPrompt = () => {
+        const promptParts = [];
+        
+        promptParts.push('אתה רובי-בוט - צ\'אטבוט חינוכי אינטראקטיבי.');
+        
+        if (answers.q1 !== '5') {
+          const domains = ['תנ"ך והיסטוריה יהודית', 'היסטוריה כללית', 'מדע וטבע', 'ספרות ואמנות'];
+          promptParts.push(`התחום שלך: ${domains[parseInt(answers.q1) - 1]}.`);
+        }
+        
+        if (answers.q2 !== '5') {
+          const types = ['אדם אמיתי מההיסטוריה', 'דמות מהתנ"ך', 'מדען/ית מפורסם/ת', 'דמות בדיונית'];
+          promptParts.push(`אתה מגלם: ${types[parseInt(answers.q2) - 1]}.`);
+        }
+        
+        if (answers.q3 !== '5') {
+          const ages = ['ילדים בגילאי 6-8', 'ילדים בגילאי 8-10', 'ילדים בגילאי 10-12', 'בני נוער 12-15'];
+          promptParts.push(`קהל היעד: ${ages[parseInt(answers.q3) - 1]}.`);
+        }
+        
+        if (answers.q4 !== '5') {
+          const langs = ['ענה בעברית בלבד', 'ענה בגרמנית בלבד', 'ענה באנגלית בלבד', 'ענה בשפת המשתמש (עברית/גרמנית/אנגלית)'];
+          promptParts.push(langs[parseInt(answers.q4) - 1] + '.');
+        }
+        
+        if (answers.q5 !== '5') {
+          const styles = ['השתמש בסגנון רשמי וחינוכי', 'השתמש בסגנון חם של סבא/סבתא', 'השתמש בסגנון מצחיק וקליל', 'השתמש בסגנון דרמטי ורגשי'];
+          promptParts.push(styles[parseInt(answers.q5) - 1] + '.');
+        }
+        
+        if (answers.q6 !== '5') {
+          const poetry = ['חבר שירים כשמבקשים ממך', 'חבר שירים רק אם זה מתאים לדמותך', 'אל תחבר שירים'];
+          promptParts.push(poetry[parseInt(answers.q6) - 1] + '.');
+        }
+        
+        if (answers.q7 !== '5') {
+          const lengths = ['תשובות קצרצרות (1-2 משפטים)', 'תשובות קצרות (2-4 משפטים)', 'תשובות בינוניות (4-6 משפטים)', 'תשובות ארוכות (פסקה מלאה)'];
+          promptParts.push(`אורך תשובות: ${lengths[parseInt(answers.q7) - 1]}.`);
+        }
+        
+        if (answers.q8 !== '5') {
+          const additional = ['אתה הדמות היחידה', 'ניתן גם לשאול על משפחתך וחבריך', 'ניתן גם לשאול על דמויות נוספות מאותו תחום'];
+          promptParts.push(additional[parseInt(answers.q8) - 1] + '.');
+        }
+        
+        if (answers.q9 !== '5') {
+          const unknown = ['כשלא יודע תשובה, אמור "לא יודע"', 'כשלא יודע תשובה, אמור "זה לא מהתקופה שלי"', 'כשלא יודע תשובה, הפנה לשאול שאלה אחרת', 'נסה לענות גם על שאלות שאתה לא בטוח בהן'];
+          promptParts.push(unknown[parseInt(answers.q9) - 1] + '.');
+        }
+        
+        if (answers.q10 !== '5') {
+          const emojis = ['השתמש בהרבה אימוג\'ים 🎉😊🌟', 'השתמש באימוג\'ים במידה 😊', 'השתמש במעט אימוג\'ים', 'אל תשתמש באימוג\'ים'];
+          promptParts.push(emojis[parseInt(answers.q10) - 1] + '.');
+        }
+        
+        const finalPrompt = promptParts.join(' ');
+        setPrompt(finalPrompt);
+      };
+
+      const sendMessage = async () => {
+        if (!input.trim()) return;
+
+        const userMessage = { role: 'user', content: input };
+        setMessages(prev => [...prev, userMessage]);
+        setInput('');
+        setIsLoading(true);
+
+        try {
+          const response = await fetch('/api/gemini', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: messages.map(m => ({
+                role: m.role === 'assistant' ? 'model' : m.role,
+                parts: [{ text: m.content }]
+              })).concat([{
+                role: 'user',
+                parts: [{ text: input }]
+              }]),
+              systemPrompt: prompt
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('שגיאה בתקשורת עם השרת');
+          }
+
+          const data = await response.json();
+          const assistantMessage = {
+            role: 'model',
+            content: data.content || 'מצטער, לא הצלחתי לקבל תשובה'
+          };
+
+          setMessages(prev => [...prev, assistantMessage]);
+        } catch (error) {
+          console.error('Error:', error);
+          setMessages(prev => [...prev, {
+            role: 'model',
+            content: '❌ אופס! יש בעיה בחיבור. בדוק את הגד
